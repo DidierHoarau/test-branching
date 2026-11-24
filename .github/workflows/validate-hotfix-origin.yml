@@ -1,0 +1,28 @@
+name: Validate hotfix branch origin
+on:
+  create:
+permissions:
+  contents: write
+jobs:
+  validate:
+    if: github.event.ref_type == 'branch' && startsWith(github.event.ref, 'hotfix/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Verify the branch starts from main
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ github.event.ref }}
+        run: |
+          git fetch --no-tags origin "+refs/heads/$BRANCH:refs/remotes/origin/$BRANCH"
+          tip=$(git rev-parse "refs/remotes/origin/$BRANCH")
+          if git merge-base --is-ancestor "$tip" origin/main; then
+            echo "OK: $BRANCH starts at a commit on main ($tip)"
+          else
+            echo "::error::$BRANCH was not created from main (tip $tip is not on main); deleting the branch."
+            gh api -X DELETE "repos/$GITHUB_REPOSITORY/git/refs/heads/$BRANCH"
+            exit 1
+          fi
