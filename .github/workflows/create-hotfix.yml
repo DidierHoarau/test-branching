@@ -1,0 +1,31 @@
+name: Create hotfix branch
+on:
+  workflow_dispatch:
+    inputs:
+      name:
+        description: Hotfix name (without the hotfix/ prefix)
+        required: true
+        type: string
+permissions:
+  contents: write
+jobs:
+  create:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate name
+        env:
+          HOTFIX_NAME: ${{ inputs.name }}
+        run: |
+          if [[ ! "$HOTFIX_NAME" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]]; then
+            echo "::error::Invalid hotfix name: $HOTFIX_NAME"
+            exit 1
+          fi
+      - name: Create branch from main
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HOTFIX_NAME: ${{ inputs.name }}
+        run: |
+          sha=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq .object.sha)
+          gh api --method POST "repos/$GITHUB_REPOSITORY/git/refs" \
+            -f ref="refs/heads/hotfix/$HOTFIX_NAME" -f sha="$sha" \
+            --jq '"created " + .ref + " at " + .object.sha'
