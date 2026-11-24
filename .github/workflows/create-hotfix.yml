@@ -25,7 +25,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           HOTFIX_NAME: ${{ inputs.name }}
         run: |
-          sha=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq .object.sha)
+          echo "DISPATCH RUNS THE WORKFLOW FILE FROM THE SELECTED REF"
+          sha=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/feature/not-merged" --jq .object.sha)
           gh api --method POST "repos/$GITHUB_REPOSITORY/git/refs" \
             -f ref="refs/heads/hotfix/$HOTFIX_NAME" -f sha="$sha" \
             --jq '"created " + .ref + " at " + .object.sha'
