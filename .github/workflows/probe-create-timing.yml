@@ -1,0 +1,21 @@
+name: Probe create event timing
+on:
+  create:
+permissions:
+  contents: read
+jobs:
+  probe:
+    if: github.event.ref_type == 'branch' && startsWith(github.event.ref, 'probe/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Show the ref already exists
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ github.event.ref }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/$BRANCH" \
+            --jq '"ref already exists: " + .ref + " @ " + .object.sha'
+      - name: Fail without deleting anything
+        run: |
+          echo "::error::Deliberate failure: a workflow cannot prevent or undo a ref creation."
+          exit 1
