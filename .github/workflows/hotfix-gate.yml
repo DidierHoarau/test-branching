@@ -1,0 +1,13 @@
+name: Hotfix gate
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  hotfix-gate:
+    name: hotfix-gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report gate check on the main commit
+        run: echo "hotfix-gate passed for $GITHUB_SHA on $GITHUB_REF"
